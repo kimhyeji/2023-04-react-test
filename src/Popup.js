@@ -13,6 +13,8 @@ export default function Popup() {
       {`popupVisible : ${popupVisible}`}
       {popupVisible && <div style={{ width: 100, height: 100, border }}></div>}
       <button className="btn text-xl">Button</button>
+      <img src="https://picsum.photos/id/200/400/400" />
+      <img src="https://picsum.photos/id/201/400/400" />
     </>
   );
 }
