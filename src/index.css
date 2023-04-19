@@ -29,3 +29,7 @@ html > body button {
   text-underline-position: under;
   line-height: 1.3; /* 이 폰트 특성상 */
 }
+
+.border {
+  border: 10px solid black;
+}
