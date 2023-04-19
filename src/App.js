@@ -1,9 +1,9 @@
-import ProdList from "./ProdList";
+import NoRecord from "./NoRecord";
 
 function App() {
   return (
     <>
-      <ProdList className="container mx-auto" />
+      <NoRecord />
     </>
   );
 }
