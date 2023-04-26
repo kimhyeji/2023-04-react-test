@@ -1,64 +1,64 @@
-import React, { useState } from "react";
-import classnames from "https://cdn.skypack.dev/classnames";
+import React, { useState, useEffect } from "react";
 
-function NotifyOnce({ children }) {
-  const [visible, setVisible] = useState(false);
-  const [workDone, setWorkDone] = useState(false);
+let AppCallCount = 0;
+let SubCallCount = 0;
 
-  if (workDone == false) {
-    setTimeout(function () {
-      setVisible(true);
-    }, 1000);
+function Sub({ appNo }) {
+  SubCallCount++;
+  console.log(`SubCallCount :  ${SubCallCount}`);
 
-    setTimeout(function () {
-      setVisible(false);
-    }, 3000);
+  const [no, setNo] = useState(0);
+  const [no2, setNo2] = useState(0);
 
-    setWorkDone(true);
-  }
+  useEffect(() => {
+    console.log("effect 1 : 단 한번 실행");
+  }, []);
 
-  return (
-    <div
-      className={classnames(
-        "fixed transition-all right-[10px]",
-        {
-          "top-[-60px]": !visible,
-        },
-        {
-          "top-[10px]": visible,
-        }
-      )}
-    >
-      {children}
-    </div>
-  );
-}
+  useEffect(() => {
+    console.log("effect 2 : 부모(App)의 appNo가 바뀔 때마다 실행");
+  }, [appNo]);
 
-function Alert({ color: color_, children }) {
-  const color = color_ ?? "white";
+  useEffect(() => {
+    console.log("effect 3 : 나(Sub)의 no가 바뀔 때마다 실행");
+  }, [no]);
+
+  useEffect(() => {
+    console.log("effect 4 : appNo 혹은 no가 바뀔 때마다 실행");
+  }, [appNo, no]);
+
+  useEffect(() => {
+    console.log("effect 5 : 매번 실행");
+  });
 
   return (
-    <div className="alert alert-info shadow-lg">
-      <div className={`text-[${color}]`}>
-        <span>
-          <i className="fa-solid fa-circle-info"></i>
-        </span>
-        <span>{children}</span>
+    <>
+      <div style={{ border: "10px solid blue", padding: 10 }}>
+        App no : {appNo}
+        <button className="btn btn-outline" onClick={() => setNo(no + 1)}>
+          Sub 버튼(no) : {no}
+        </button>
+        <button className="btn btn-outline" onClick={() => setNo2(no2 + 1)}>
+          Sub 버튼(no2) : {no2}
+        </button>
       </div>
-    </div>
+    </>
   );
 }
 
 function App() {
+  AppCallCount++;
+  console.log(`AppCallCount :  ${AppCallCount}`);
+
+  const [no, setNo] = useState(0);
+
   return (
     <>
-      <NotifyOnce>
-        <Alert>안녕하세요</Alert>
-      </NotifyOnce>
-      <div>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Ea, amet
-        mollitia impedit porro asperiores quidem voluptatum cumque saepe iusto
-        laudantium velit ad maiores nemo dolore ipsa delectus fuga ab quam.
+      <div style={{ border: "10px solid red", padding: 10 }}>
+        <button className="btn btn-outline" onClick={() => setNo(no + 1)}>
+          APP 버튼 : {no}
+        </button>
+        <hr />
+        <Sub appNo={no} />
       </div>
     </>
   );
