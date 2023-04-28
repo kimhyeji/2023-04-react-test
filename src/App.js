@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 function isPrimeNumber(no) {
   for (let i = 2; i < no; i++) {
@@ -30,51 +30,42 @@ function getPrimeNumbersCount(max) {
   return getPrimeNumbers(max).length;
 }
 
-function App() {
-  const [inputedNo, setInputedNo] = useState(0);
-  const [no, setNo] = useState(0);
+let PrimeNosCountCallCount = 0;
 
-  const primeNumbersCount = useMemo(
-    () => getPrimeNumbersCount(inputedNo),
-    [inputedNo]
+function PrimeNosCount({ max }) {
+  PrimeNosCountCallCount++;
+  console.log(`PrimeNosCountCallCount : ${PrimeNosCountCallCount}`);
+
+  const count = useMemo(() => getPrimeNumbersCount(max), [max]);
+
+  return (
+    <div style={{ border: "10px solid black", padding: 50 }}>
+      {max}사이에 존재하는 소스의 개수는 {count}개 이다.
+    </div>
   );
+}
 
-  const onSubmit = (e) => {
-    e.preventDefault();
+const MemoizedPrimeNosCount = React.memo(PrimeNosCount);
 
-    const form = e.target;
+let AppCallCount = 0;
 
-    form.number.value = form.number.value.trim();
+function App() {
+  AppCallCount++;
+  console.log(`AppCallCount : ${AppCallCount}`);
 
-    if (form.number.value.length == 0) {
-      alert("숫자를 입력해주세요.");
-      form.number.focus();
-
-      return;
-    }
-
-    const number = form.number.valueAsNumber;
-    form.number.focus();
-
-    setInputedNo(number);
-  };
+  const [no, setNo] = useState(0);
 
   return (
     <>
-      <button onClick={() => setNo(no + 1)}>번호 : {no}</button>
+      <MemoizedPrimeNosCount max={100} />
       <hr />
-      <form onSubmit={onSubmit}>
-        <input
-          type="number"
-          name="number"
-          placeholder="숫자를 입력해주세요."
-          defaultValue="0"
-        />
-        <input type="submit" value="확인" />
-        <hr />
-        <div>MAX : {inputedNo}</div>
-        <div>소수의 개수 : {primeNumbersCount}</div>
-      </form>
+      <MemoizedPrimeNosCount max={200} />
+      <hr />
+      <MemoizedPrimeNosCount max={300} />
+      <hr />
+      <MemoizedPrimeNosCount max={5000000} />
+      <hr />
+      <button onClick={() => setNo(no + 1)}>버튼 : {no}</button>
     </>
   );
 }
