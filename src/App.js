@@ -1,45 +1,80 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 
-let AppCallCount = 0;
+function isPrimeNumber(no) {
+  for (let i = 2; i < no; i++) {
+    if (i * i > no) {
+      break;
+    }
+
+    if (no % i == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function getPrimeNumbers(max) {
+  const primeNumbers = [];
+
+  for (let i = 2; i <= max; i++) {
+    if (isPrimeNumber(i)) {
+      primeNumbers.push(i);
+    }
+  }
+
+  return primeNumbers;
+}
+
+function getPrimeNumbersCount(max) {
+  return getPrimeNumbers(max).length;
+}
 
 function App() {
-  AppCallCount++;
-  console.log(`AppCallCount :  ${AppCallCount}`);
-
+  const [inputedNo, setInputedNo] = useState(0);
   const [no, setNo] = useState(0);
-  const [isDark, setIsDark] = useState(false);
 
-  useEffect(() => {
-    const html = document.getElementsByTagName("html")[0];
+  const primeNumbersCount = useMemo(
+    () => getPrimeNumbersCount(inputedNo),
+    [inputedNo]
+  );
 
-    if (isDark) {
-      html.classList.add("dark");
-    } else {
-      html.classList.remove("dark");
+  const onSubmit = (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+
+    form.number.value = form.number.value.trim();
+
+    if (form.number.value.length == 0) {
+      alert("숫자를 입력해주세요.");
+      form.number.focus();
+
+      return;
     }
-  }, [isDark]);
+
+    const number = form.number.valueAsNumber;
+    form.number.focus();
+
+    setInputedNo(number);
+  };
 
   return (
     <>
-      <div>
-        <button className="btn btn-outline" onClick={() => setNo(no + 1)}>
-          APP 버튼 : {no}
-        </button>
-        <button className="btn btn-outline" onClick={() => setIsDark(!isDark)}>
-          테마토글
-        </button>
-
+      <button onClick={() => setNo(no + 1)}>번호 : {no}</button>
+      <hr />
+      <form onSubmit={onSubmit}>
+        <input
+          type="number"
+          name="number"
+          placeholder="숫자를 입력해주세요."
+          defaultValue="0"
+        />
+        <input type="submit" value="확인" />
         <hr />
-
-        <div>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Voluptas
-          error mollitia ad veritatis delectus itaque eaque minus perspiciatis
-          quae atque id, minima praesentium ullam quidem enim alias. Placeat,
-          obcaecati corporis.
-        </div>
-
-        <h1 className="color-primary">안녕, 반가워</h1>
-      </div>
+        <div>MAX : {inputedNo}</div>
+        <div>소수의 개수 : {primeNumbersCount}</div>
+      </form>
     </>
   );
 }
