@@ -1,6 +1,38 @@
 import React, { useState, useRef } from "react";
 
-function App() {
+function TodoApp({ todosState }) {
+  const onBtnAddTodoClick = () => {
+    todosState.addTodo("안녕");
+  };
+
+  const onBtnRemoveTodoClick = () => {
+    todosState.removeTodo(1);
+  };
+
+  const onBtnModifyTodoClick = () => {
+    todosState.modifyTodo(1, "ㅋㅋㅋ");
+  };
+
+  return (
+    <>
+      <button onClick={onBtnAddTodoClick}>추가</button>
+      <button onClick={onBtnRemoveTodoClick}>삭제</button>
+      <button onClick={onBtnModifyTodoClick}>수정</button>
+      <hr />
+      <ul>
+        {todosState.todos.map((todo, index) => (
+          <li key={index}>
+            {todo.id}
+            {todo.regDate}
+            {todo.content}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function useTodosState() {
   const [todos, setTodos] = useState([]);
   const lastTodoIdRed = useRef(0);
 
@@ -29,33 +61,20 @@ function App() {
     setTodos(newTodos);
   };
 
-  const onBtnAddTodoClick = () => {
-    addTodo("안녕");
+  return {
+    todos,
+    addTodo,
+    modifyTodo,
+    removeTodo,
   };
+}
 
-  const onBtnRemoveTodoClick = () => {
-    removeTodo(1);
-  };
-
-  const onBtnModifyTodoClick = () => {
-    modifyTodo(1, "ㅋㅋㅋ");
-  };
+function App() {
+  const todosState = useTodosState();
 
   return (
     <>
-      <button onClick={onBtnAddTodoClick}>추가</button>
-      <button onClick={onBtnRemoveTodoClick}>삭제</button>
-      <button onClick={onBtnModifyTodoClick}>수정</button>
-      <hr />
-      <ul>
-        {todos.map((todo, index) => (
-          <li key={index}>
-            {todo.id}
-            {todo.regDate}
-            {todo.content}
-          </li>
-        ))}
-      </ul>
+      <TodoApp todosState={todosState} />
     </>
   );
 }
