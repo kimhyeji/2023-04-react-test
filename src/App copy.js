@@ -17,17 +17,67 @@ import {
 } from "@mui/material";
 import classNames from "classnames";
 import { useMemo } from "react";
+import {
+  atom,
+  atomFamily,
+  useRecoilState,
+  useSetRecoilState,
+  useRecoilValue,
+  useResetRecoilState,
+} from "recoil";
+
+import { recoilPersist } from "recoil-persist";
+
+const { persistAtom: persistAtomTodos } = recoilPersist({
+  key: "persistAtomTodos",
+});
+
+const { persistAtom: persistAtomLastTodoId } = recoilPersist({
+  key: "persistAtomLastTodoId",
+});
 
 const Alert = React.forwardRef((props, ref) => {
   return <MuiAlert {...props} ref={ref} variant="filled" />;
 });
 
+const todosAtom = atom({
+  key: "app/todosAtom",
+  default: [
+    {
+      id: 3,
+      regDate: "2023-05-22",
+      content: "요리",
+    },
+    {
+      id: 2,
+      regDate: "2023-05-22",
+      content: "운동",
+    },
+    {
+      id: 1,
+      regDate: "2023-05-22",
+      content: "공부",
+    },
+  ],
+  effects_UNSTABLE: [persistAtomTodos],
+});
+
+const lastTodoIdAtom = atom({
+  key: "app/lastTodoIdAtom",
+  default: 3,
+  effects_UNSTABLE: [persistAtomLastTodoId],
+});
+
 function useTodosState() {
-  const [todos, setTodos] = useState([]);
-  const lastTodoIdRef = useRef(0);
+  const [todos, setTodos] = useRecoilState(todosAtom);
+  const [lastTodoId, setLastTodoId] = useRecoilState(lastTodoIdAtom);
+  const lastTodoIdRef = useRef(lastTodoId);
+
+  lastTodoIdRef.current = lastTodoId;
 
   const addTodo = (newContent) => {
     const id = ++lastTodoIdRef.current;
+    setLastTodoId(id);
 
     const newTodo = {
       id,
@@ -96,7 +146,7 @@ function useTodosState() {
   };
 }
 
-function TodoListItem({ todo, index, todosState, openDrawer }) {
+function TodoListItem({ todo, index, openDrawer }) {
   return (
     <>
       <li key={todo.id} className="mt-10">
@@ -168,13 +218,10 @@ function useTodoOptionDrawerState() {
   };
 }
 
-function EditTodoModal({
-  state,
-  todosState,
-  todo,
-  closeDrawer,
-  noticeSnackbarState,
-}) {
+function EditTodoModal({ state, todo, closeDrawer }) {
+  const todosState = useTodosState();
+  const noticeSnackbarState = useNoticeSnackbarState();
+
   const close = () => {
     state.close();
     closeDrawer();
@@ -242,7 +289,10 @@ function useEditTodoModalState() {
   return { opened, open, close };
 }
 
-function TodoOptionDrawer({ state, todosState, noticeSnackbarState }) {
+function TodoOptionDrawer({ state }) {
+  const todosState = useTodosState();
+  const noticeSnackbarState = useNoticeSnackbarState();
+
   const removeTodo = () => {
     if (
       window.confirm(`${state.todoId}번 할 일을 삭제하시겠습니까?`) == false
@@ -265,10 +315,8 @@ function TodoOptionDrawer({ state, todosState, noticeSnackbarState }) {
     <>
       <EditTodoModal
         state={editTodoModalState}
-        todosState={todosState}
         todo={todo}
         closeDrawer={state.close}
-        noticeSnackbarState={noticeSnackbarState}
       />
       <SwipeableDrawer
         anchor={"bottom"}
@@ -305,16 +353,13 @@ function TodoOptionDrawer({ state, todosState, noticeSnackbarState }) {
   );
 }
 
-function TodoList({ todosState, noticeSnackbarState }) {
+function TodoList() {
+  const todosState = useTodosState();
   const todoOptionDrawerState = useTodoOptionDrawerState();
 
   return (
     <>
-      <TodoOptionDrawer
-        state={todoOptionDrawerState}
-        todosState={todosState}
-        noticeSnackbarState={noticeSnackbarState}
-      />
+      <TodoOptionDrawer state={todoOptionDrawerState} />
       <div className="mt-4 px-4">
         <ul>
           {todosState.todos.map((todo, index) => (
@@ -322,7 +367,6 @@ function TodoList({ todosState, noticeSnackbarState }) {
               key={todo.id}
               todo={todo}
               index={index}
-              todosState={todosState}
               openDrawer={todoOptionDrawerState.open}
             />
           ))}
@@ -332,7 +376,10 @@ function TodoList({ todosState, noticeSnackbarState }) {
   );
 }
 
-function NewTodoForm({ todosState, noticeSnackbarState }) {
+function NewTodoForm() {
+  const todosState = useTodosState();
+  const noticeSnackbarState = useNoticeSnackbarState();
+
   const onSubmit = (e) => {
     e.preventDefault();
 
@@ -373,7 +420,9 @@ function NewTodoForm({ todosState, noticeSnackbarState }) {
   );
 }
 
-function NoticeSnackbar({ state }) {
+function NoticeSnackbar() {
+  const state = useNoticeSnackbarState();
+
   return (
     <>
       <Snackbar
@@ -387,21 +436,37 @@ function NoticeSnackbar({ state }) {
   );
 }
 
+const noticeSnackbarInfoAtom = atom({
+  key: "app/noticeSnackbarInfoAtom",
+  default: {
+    opened: false,
+    autoHideDuration: 0,
+    severity: "",
+    msg: "",
+  },
+});
+
 function useNoticeSnackbarState() {
-  const [opened, setOpened] = useState(false);
-  const [autoHideDuration, setAutoHideDuration] = useState(null);
-  const [severity, setSeverity] = useState(null);
-  const [msg, setMsg] = useState(null);
+  const [noticeSnackbarInfo, setNoticeSnackbarInfo] = useRecoilState(
+    noticeSnackbarInfoAtom
+  );
+
+  const opened = noticeSnackbarInfo.opened;
+  const autoHideDuration = noticeSnackbarInfo.autoHideDuration;
+  const severity = noticeSnackbarInfo.severity;
+  const msg = noticeSnackbarInfo.msg;
 
   const open = (msg, severity = "success", autoHideDuration = 6000) => {
-    setOpened(true);
-    setMsg(msg);
-    setSeverity(severity);
-    setAutoHideDuration(autoHideDuration);
+    setNoticeSnackbarInfo({
+      opened: true,
+      msg,
+      severity,
+      autoHideDuration,
+    });
   };
 
   const close = () => {
-    setOpened(false);
+    setNoticeSnackbarInfo({ ...noticeSnackbarInfo, opened: false });
   };
 
   return {
@@ -415,18 +480,9 @@ function useNoticeSnackbarState() {
 }
 
 export default function App() {
-  const todosState = useTodosState();
-  const noticeSnackbarState = useNoticeSnackbarState();
-
-  useEffect(() => {
-    todosState.addTodo("운동\n스트레칭\n유산소\n상체\n하체볼륨 트레이닝");
-    todosState.addTodo("명상");
-    todosState.addTodo("공부");
-  }, []);
-
   return (
     <>
-      <AppBar position="fixed" onClick={() => noticeSnackbarState.open("안녕")}>
+      <AppBar position="fixed">
         <Toolbar>
           <div className="flex-1"></div>
           <span className="font-bold">HAPPY NOTE</span>
@@ -435,15 +491,9 @@ export default function App() {
       </AppBar>
 
       <Toolbar />
-      <NoticeSnackbar state={noticeSnackbarState} />
-      <NewTodoForm
-        todosState={todosState}
-        noticeSnackbarState={noticeSnackbarState}
-      />
-      <TodoList
-        todosState={todosState}
-        noticeSnackbarState={noticeSnackbarState}
-      />
+      <NoticeSnackbar />
+      <NewTodoForm />
+      <TodoList />
     </>
   );
 }
